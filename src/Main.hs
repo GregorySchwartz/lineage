@@ -3,6 +3,7 @@
 
 -- | Built-in
 import qualified Data.ByteString.Lazy as B
+import qualified Data.Sequence as Seq
 
 -- | Cabal
 import Options.Applicative
@@ -10,6 +11,7 @@ import Data.Fasta.String
 import Data.Aeson
 
 -- | Local
+import Types
 import Utility
 import Tree
 
@@ -62,7 +64,9 @@ sharedTree opts = do
                                 . fastaToSuperFasta copyBool copyIdx)
                           . tail
                           $ completeFastaList
-        tree              = createTree ((0, ('-', '-')), 0) fastaList
+        tree              = createTree ((0, ('-', '-')), 0)
+                            (Seq.fromList . superFastaSeq $ root)
+                            fastaList
 
     if haskellFlag opts
         then writeFile (output opts) . show $ tree

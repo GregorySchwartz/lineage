@@ -10,14 +10,16 @@ module Types where
 -- Built-in
 import qualified Data.Map as M
 import GHC.Generics
+import qualified Data.Sequence as Seq
 
 -- Cabal
 import Data.Aeson
 
 -- Algebraic
-data TreeInfo = TreeInfo { sequences :: [PrintFasta]
-                         , mutation  :: String
-                         , number    :: Int }
+data TreeInfo = TreeInfo { sequences    :: [PrintFasta]
+                         , nodeSequence :: String
+                         , mutation     :: String
+                         , number       :: Int }
                          deriving (Show, Generic)
 
 data SuperFasta = SuperFasta { superFastaSeq    :: String
@@ -39,4 +41,5 @@ instance ToJSON PrintFasta
 type Position = Int
 
 -- Advanced
-type Mutation = (Position, (Char, Char))
+type ParentSeq = Seq.Seq Char
+type Mutation  = (Position, (Char, Char))
