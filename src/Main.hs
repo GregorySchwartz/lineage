@@ -16,6 +16,7 @@ import Tree
 -- Command line arguments
 data Options = Options { input          :: String
                        , copyFlag       :: Bool
+                       , haskellFlag    :: Bool
                        , inputCopyField :: Int
                        , output         :: String
                        }
@@ -32,6 +33,10 @@ options = Options
           ( long "copyNumber"
          <> short 'c'
          <> help "Whether to take copy number into account for the mutations" )
+      <*> switch
+          ( long "haskell"
+         <> short 'H'
+         <> help "Whether to print the output as a haskell type" )
       <*> option auto
           ( long "inputCopyField"
          <> short 'C'
@@ -59,7 +64,9 @@ sharedTree opts = do
                           $ completeFastaList
         tree              = createTree ((0, ('-', '-')), 0) fastaList
 
-    B.writeFile (output opts) . encode $ tree
+    if haskellFlag opts
+        then writeFile (output opts) . show $ tree
+        else B.writeFile (output opts) . encode $ tree
 
 main :: IO ()
 main = execParser opts >>= sharedTree
