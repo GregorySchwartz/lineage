@@ -28,8 +28,9 @@ data SuperFasta = SuperFasta { superFastaSeq    :: String
                              , mutations   :: M.Map Mutation Int }
                              deriving (Show, Generic)
 
-data PrintFasta = PrintFasta { printFastaSeq    :: String
-                             , printFastaHeader :: String }
+data PrintFasta = PrintFasta { printFastaSeq      :: String
+                             , printFastaHeader   :: String
+                             , remainingMutations :: Int }
                              deriving (Show, Generic)
 
 instance FromJSON TreeInfo

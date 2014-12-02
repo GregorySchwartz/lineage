@@ -22,9 +22,11 @@ import Types
 -- | Convert a SuperFasta to a PrintFasta, for easy saving to JSON
 superFastaToPrintFasta :: SuperFasta -> PrintFasta
 superFastaToPrintFasta ( SuperFasta { superFastaSeq    = x
-                                    , superFastaHeader = y } ) =
-    PrintFasta { printFastaSeq    = x
-               , printFastaHeader = y }
+                                    , superFastaHeader = y
+                                    , mutations        = z } ) =
+    PrintFasta { printFastaSeq      = x
+               , printFastaHeader   = y
+               , remainingMutations = M.size z}
 
 -- | Convert a FastaSequence to a SuperFasta, with mutations and copy number.
 -- IMPORTANT: I get the mutations later as I need the copy number first
