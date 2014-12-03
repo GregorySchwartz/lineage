@@ -2,6 +2,7 @@
 -- By Gregory W. Schwartz
 
 -- | Built-in
+import Data.Maybe
 import qualified Data.ByteString.Lazy as B
 import qualified Data.Sequence as Seq
 
@@ -17,6 +18,7 @@ import Tree
 
 -- Command line arguments
 data Options = Options { input          :: String
+                       , expandFlag     :: Bool
                        , copyFlag       :: Bool
                        , haskellFlag    :: Bool
                        , inputCopyField :: Int
@@ -32,7 +34,12 @@ options = Options
          <> metavar "FILE"
          <> help "The input fasta file, where the first entry is the root" )
       <*> switch
-          ( long "copyNumber"
+          ( long "expand-tree"
+         <> short 'e'
+         <> help "Whether to output the expanded tree with no collapsing of\
+                 \ each mutation node" )
+      <*> switch
+          ( long "copy-number"
          <> short 'c'
          <> help "Whether to take copy number into account for the mutations" )
       <*> switch
@@ -40,7 +47,7 @@ options = Options
          <> short 'H'
          <> help "Whether to print the output as a haskell type" )
       <*> option auto
-          ( long "inputCopyField"
+          ( long "input-copy-field"
          <> short 'C'
          <> value 1
          <> metavar "INT"
@@ -64,13 +71,16 @@ sharedTree opts = do
                                 . fastaToSuperFasta copyBool copyIdx)
                           . tail
                           $ completeFastaList
-        tree              = createTree ((0, ('-', '-')), 0)
+        tree              = createTree Nothing
                             (Seq.fromList . superFastaSeq $ root)
                             fastaList
+        finalTree         = if expandFlag opts
+                                then tree
+                                else collapseTree [] tree
 
     if haskellFlag opts
-        then writeFile (output opts) . show $ tree
-        else B.writeFile (output opts) . encode $ tree
+        then writeFile (output opts) . show $ finalTree
+        else B.writeFile (output opts) . encode $ finalTree
 
 main :: IO ()
 main = execParser opts >>= sharedTree

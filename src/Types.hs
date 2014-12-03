@@ -16,10 +16,10 @@ import qualified Data.Sequence as Seq
 import Data.Aeson
 
 -- Algebraic
-data TreeInfo = TreeInfo { sequences    :: [PrintFasta]
-                         , nodeSequence :: String
-                         , mutation     :: String
-                         , number       :: Int }
+data TreeInfo = TreeInfo { sequences     :: [PrintFasta]
+                         , nodeSequence  :: String
+                         , nodeMutations :: [String]
+                         , number        :: Int }
                          deriving (Show, Generic)
 
 data SuperFasta = SuperFasta { superFastaSeq    :: String
