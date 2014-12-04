@@ -59,13 +59,12 @@ collapseTree :: [String] -> Tree TreeInfo -> Tree TreeInfo
 collapseTree _ tree@(Node { rootLabel = TreeInfo { nodeMutations = [] }
                           , subForest = ts }) =
     tree { subForest = map (collapseTree []) ts }
-collapseTree _ tree@(Node { subForest = [] }) = tree
 collapseTree muts tree@(Node { rootLabel = rl, subForest = ts })
     | anyObserved || (not anyObserved && (not . null . tail $ ts)) =
         tree { rootLabel = rl { nodeMutations = nodeMutations rl ++ muts }
              , subForest = map (collapseTree []) ts }
-    | not anyObserved
-   && (null . tail $ ts) = collapseTree (muts ++ nodeMutations rl) . head $ ts
+    | not anyObserved && (null . tail $ ts) =
+        collapseTree (muts ++ nodeMutations rl) . head $ ts
     | otherwise = tree { subForest = map (collapseTree []) ts }
   where
-    anyObserved = all (== 0) . map remainingMutations . sequences $ rl
+    anyObserved = any (== 0) . map remainingMutations . sequences $ rl
