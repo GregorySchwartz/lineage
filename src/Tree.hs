@@ -7,6 +7,7 @@
 module Tree where
 
 -- Built-in
+import Data.Maybe
 import qualified Data.Map as M
 import Data.Tree
 import qualified Data.Sequence as Seq
@@ -36,8 +37,9 @@ createTree mutFreq parentSeq fastaList =
                                               superFastaToPrintFasta
                                               fastaList
                                 , nodeSequence  = F.toList newSeq
-                                , nodeMutations = (: [])
-                                . printMutation
+                                , nodeMutations = catMaybes
+                                . (: [])
+                                . fmap (show . fst)
                                 $ mutFreq
                                 , number    = printNumber mutFreq }
          , subForest = getSubForest newSeq
@@ -46,8 +48,6 @@ createTree mutFreq parentSeq fastaList =
   where
     printNumber Nothing = 0
     printNumber (Just (_, x)) = x
-    printMutation Nothing = ""
-    printMutation (Just (x, _)) = show x
     newSeq = mutate mutFreq parentSeq
     mutate Nothing = id
     mutate (Just ((p, (_, x)), _))     = Seq.update (p - 1) x
@@ -55,14 +55,16 @@ createTree mutFreq parentSeq fastaList =
 -- | Collapse nodes where there are no observed sequences, as we don't know
 -- what order the mutations happened in
 collapseTree :: [String] -> Tree TreeInfo -> Tree TreeInfo
-collapseTree _ tree@(Node { rootLabel = TreeInfo { nodeMutations = [""] }
+collapseTree _ tree@(Node { rootLabel = TreeInfo { nodeMutations = [] }
                           , subForest = ts }) =
     tree { subForest = map (collapseTree []) ts }
 collapseTree _ tree@(Node { subForest = [] }) = tree
 collapseTree muts tree@(Node { rootLabel = rl, subForest = ts })
-    | any (== 0) . map remainingMutations . sequences $ rl =
+    | anyObserved || (not anyObserved && (not . null . tail $ ts)) =
         tree { rootLabel = rl { nodeMutations = nodeMutations rl ++ muts }
              , subForest = map (collapseTree []) ts }
-    | (all (/= 0) . map remainingMutations . sequences $ rl)
+    | not anyObserved
    && (null . tail $ ts) = collapseTree (muts ++ nodeMutations rl) . head $ ts
     | otherwise = tree { subForest = map (collapseTree []) ts }
+  where
+    anyObserved = all (== 0) . map remainingMutations . sequences $ rl
