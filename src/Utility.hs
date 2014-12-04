@@ -48,10 +48,10 @@ toEmptySuperFasta (FastaSequence { fastaSeq = x, fastaHeader = y }) =
                , mutations        = M.empty }
 
 -- | Assign mutations to a SuperFasta
-assignMutations :: SuperFasta -> SuperFasta -> SuperFasta
-assignMutations germline f = f { mutations = M.fromListWith (+)
-                                           . getMutations germline
-                                           $ f }
+assignMutations :: Bool -> SuperFasta -> SuperFasta -> SuperFasta
+assignMutations aaBool germline f = f { mutations = M.fromListWith (+)
+                                                 . getMutations aaBool germline
+                                                 $ f }
 
 -- | Get the copy number of a FastaSequence
 getCopyNumber :: Bool -> Int -> FastaSequence -> Int
@@ -80,18 +80,22 @@ getComparisons x y = zip (zip [1..] . zip (superFastaSeq x) $ superFastaSeq y)
                    $ y
 
 -- | Get the list of mutations from two fasta sequences with the copy number
--- of the second sequence
-getMutations :: SuperFasta
-               -> SuperFasta
-               -> [(Mutation, Int)]
-getMutations x y = filter (\((_, (a, b)), _) -> a /= b) $ getComparisons x y
+-- of the second sequence, ignoring "fake" mutations
+getMutations :: Bool
+             -> SuperFasta
+             -> SuperFasta
+             -> [(Mutation, Int)]
+getMutations aaBool x y = filter (pureMutation aaBool . fst)
+                        $ getComparisons x y
 
 -- | Get real mutations from a list of mutations
-pureMutations :: [Mutation] -> [Mutation]
-pureMutations = filter ( \(_, (x, y)) -> (not . isBad $ x)
-                                      && (not . isBad $ y) )
+pureMutation :: Bool -> Mutation -> Bool
+pureMutation aaBool (_, (m1, m2)) = (not . isBad aaBool $ m1)
+                                 && (not . isBad aaBool $ m2)
+                                 && (m1 /= m2)
   where
-    isBad x = x `elem` "Nn-."
+    isBad True x  = x `elem` "-."
+    isBad False x = x `elem` "Nn-."
 
 -- | Find the sequences with a mutation
 hasMut :: Mutation -> SuperFasta -> Bool

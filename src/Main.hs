@@ -2,7 +2,6 @@
 -- By Gregory W. Schwartz
 
 -- | Built-in
-import Data.Maybe
 import qualified Data.ByteString.Lazy as B
 import qualified Data.Sequence as Seq
 
@@ -20,6 +19,7 @@ import Tree
 data Options = Options { input          :: String
                        , expandFlag     :: Bool
                        , copyFlag       :: Bool
+                       , aaFlag         :: Bool
                        , haskellFlag    :: Bool
                        , inputCopyField :: Int
                        , output         :: String
@@ -42,6 +42,10 @@ options = Options
           ( long "copy-number"
          <> short 'c'
          <> help "Whether to take copy number into account for the mutations" )
+      <*> switch
+          ( long "amino-acids"
+         <> short 'a'
+         <> help "Whether the sequences are DNA or proteins" )
       <*> switch
           ( long "haskell"
          <> short 'H'
@@ -67,7 +71,7 @@ sharedTree opts = do
         copyIdx           = inputCopyField opts
         completeFastaList = parseFasta contents
         root              = toEmptySuperFasta . head $ completeFastaList
-        fastaList         = map ( assignMutations root
+        fastaList         = map ( assignMutations (aaFlag opts) root
                                 . fastaToSuperFasta copyBool copyIdx)
                           . tail
                           $ completeFastaList
