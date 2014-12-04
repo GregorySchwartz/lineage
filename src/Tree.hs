@@ -39,13 +39,14 @@ createTree mutFreq parentSeq fastaList =
                                 , nodeSequence  = F.toList newSeq
                                 , nodeMutations = catMaybes
                                 . (: [])
-                                . fmap (show . fst)
+                                . fmap (printMutation . fst)
                                 $ mutFreq
                                 , number    = printNumber mutFreq }
          , subForest = getSubForest newSeq
                      . filter (not . M.null . mutations)
                      $ fastaList }
   where
+    printMutation (x, (y, z)) = show x ++ ['-', y, '-', z]
     printNumber Nothing = 0
     printNumber (Just (_, x)) = x
     newSeq = mutate mutFreq parentSeq
