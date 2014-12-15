@@ -2,7 +2,7 @@
 -- By Gregory W. Schwartz
 
 -- | Built-in
-import qualified Data.ByteString.Lazy as B
+import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Sequence as Seq
 
 -- | Cabal
@@ -16,8 +16,7 @@ import Utility
 import Tree
 
 -- Command line arguments
-data Options = Options { input          :: String
-                       , expandFlag     :: Bool
+data Options = Options { expandFlag     :: Bool
                        , copyFlag       :: Bool
                        , aaFlag         :: Bool
                        , haskellFlag    :: Bool
@@ -28,12 +27,7 @@ data Options = Options { input          :: String
 -- Command line options
 options :: Parser Options
 options = Options
-      <$> strOption
-          ( long "input"
-         <> short 'i'
-         <> metavar "FILE"
-         <> help "The input fasta file, where the first entry is the root" )
-      <*> switch
+      <$> switch
           ( long "expand-tree"
          <> short 'e'
          <> help "Whether to output the expanded tree with no collapsing of\
@@ -61,11 +55,12 @@ options = Options
           ( long "output"
          <> short 'o'
          <> metavar "FILE"
+         <> value ""
          <> help "The output file containing the json tree" )
 
 sharedTree :: Options -> IO ()
 sharedTree opts = do
-    contents <- readFile . input $ opts
+    contents <- getContents
 
     let copyBool          = copyFlag opts
         copyIdx           = inputCopyField opts
@@ -82,9 +77,16 @@ sharedTree opts = do
                                 then tree
                                 else collapseTree [] tree
 
-    if haskellFlag opts
-        then writeFile (output opts) . show $ finalTree
-        else B.writeFile (output opts) . encode $ finalTree
+    -- Output results to stdin or file
+    if (not . null . output $ opts)
+        then
+            if haskellFlag opts
+                then writeFile (output opts) . show $ finalTree
+                else B.writeFile (output opts) . encode $ finalTree
+        else
+            if haskellFlag opts
+                then putStrLn . show $ finalTree
+                else B.putStrLn . encode $ finalTree
 
 main :: IO ()
 main = execParser opts >>= sharedTree
