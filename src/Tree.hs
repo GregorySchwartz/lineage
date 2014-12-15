@@ -4,10 +4,13 @@
 -- | Collects all functions pertaining to the creation of the shared mutation
 -- tree
 
+{-# LANGUAGE BangPatterns #-}
+
 module Tree where
 
 -- Built-in
 import Data.Maybe
+import Data.List
 import qualified Data.Map as M
 import Data.Tree
 import qualified Data.Sequence as Seq
@@ -46,7 +49,7 @@ createTree mutFreq parentSeq fastaList =
                      . filter (not . M.null . mutations)
                      $ fastaList }
   where
-    printMutation (x, (y, z)) = show x ++ ['-', y, '-', z]
+    printMutation (!x, (!y, !z)) = intercalate "-" [[y], show x, [z]]
     printNumber Nothing = 0
     printNumber (Just (_, x)) = x
     newSeq = mutate mutFreq parentSeq
