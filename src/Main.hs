@@ -32,6 +32,7 @@ options = Options
           ( long "input"
          <> short 'i'
          <> metavar "FILE"
+         <> value ""
          <> help "The input fasta file, where the first entry is the root" )
       <*> switch
           ( long "expand-tree"
